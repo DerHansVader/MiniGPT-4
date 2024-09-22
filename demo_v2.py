@@ -414,16 +414,14 @@ def gradio_ask(user_message, chatbot, chat_state, gr_img, img_list, upload_flag,
     else:
         text_box_show = ''
 
-    if isinstance(gr_img, dict):
-        gr_img, mask = gr_img['image'], gr_img['mask']
-    else:
-        mask = None
+    mask = None
 
     if '[identify]' in user_message:
         # check if user provide bbox in the text input
         integers = re.findall(r'-?\d+', user_message)
         if len(integers) != 4:  # no bbox in text
-            bbox = mask2bbox(mask)
+            # Da wir keine Maske mehr haben, müssen wir hier eine alternative Methode verwenden oder diesen Teil des Codes entfernen
+            bbox = ''  # Oder implementieren Sie eine Standardbehandlung
             user_message = user_message + bbox
 
     if chat_state is None:
@@ -476,13 +474,15 @@ def gradio_stream_answer(chatbot, chat_state, img_list, temperature):
         output += escapped
         chatbot[-1][1] = output
         yield chatbot, chat_state
+
+    print("Debug: chat_state.messages =", chat_state.messages)
     chat_state.messages[-1][1] = '</s>'
     return chatbot, chat_state
 
 
 def gradio_visualize(chatbot, gr_img):
-    if isinstance(gr_img, dict):
-        gr_img, mask = gr_img['image'], gr_img['mask']
+    # Da gr_img jetzt immer ein Bild ist, können wir direkt damit arbeiten
+    mask = None  # Oder entfernen Sie mask, wenn es nicht mehr benötigt wird
 
     unescaped = reverse_escape(chatbot[-1][1])
     visual_img, generation_color = visualize_all_bbox_together(gr_img, unescaped)
@@ -545,7 +545,7 @@ with gr.Blocks() as demo:
 
     with gr.Row():
         with gr.Column(scale=0.5):
-            image = gr.Image(type="pil", tool='sketch', brush_radius=20)
+            image = gr.Image(type="pil")
 
             temperature = gr.Slider(
                 minimum=0.1,
